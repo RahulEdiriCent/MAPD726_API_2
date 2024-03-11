@@ -686,7 +686,7 @@ server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
 
 
 //===========================CARTITEMS==================================
-server.get('/cart/:uid', (req,res,next) => {//GET PRODUCT BY ID
+server.get('/carts/:uid', (req,res,next) => {//GET PRODUCT BY ID
     
     console.log("Finding Cart Items by User ID...")
     returnMessage = {
@@ -734,7 +734,7 @@ server.get('/cart/:uid', (req,res,next) => {//GET PRODUCT BY ID
     })
 })
 
-server.get('/cartitem/:cid', (req,res,next) => {//GET PRODUCT BY ID
+server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
     
     console.log("Finding Cart Item by ID...")
     returnMessage = {
@@ -777,7 +777,7 @@ server.get('/cartitem/:cid', (req,res,next) => {//GET PRODUCT BY ID
     })
 })
 
-server.post('/cartitem', (req,res,next) => {//ADD PRODUCT
+server.post('/cartitems', (req,res,next) => {//ADD PRODUCT
     
     console.log("Adding Cart Item....")
     returnMessage = {
@@ -822,7 +822,7 @@ server.post('/cartitem', (req,res,next) => {//ADD PRODUCT
     }
 })
 
-server.put('/cartitem/:cid', (req,res,next) => {//UPDATE PRODUCT
+server.put('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
     
     console.log("Updating CartItem....")
     returnMessage = {
@@ -871,7 +871,7 @@ server.put('/cartitem/:cid', (req,res,next) => {//UPDATE PRODUCT
     }
 })
 
-server.delete('/cartitem/:cid', (req,res,next) => {//UPDATE PRODUCT
+server.delete('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
     
     console.log("Deleting Cart Item by Id....")
     returnMessage = {
