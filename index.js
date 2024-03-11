@@ -686,7 +686,7 @@ server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
 
 
 //===========================CARTITEMS==================================
-server.get('/carts/:uid', (req,res,next) => {//GET PRODUCT BY ID
+server.get('/cart/:uid', (req,res,next) => {//GET PRODUCT BY ID
     
     console.log("Finding Cart Items by User ID...")
     returnMessage = {
@@ -742,7 +742,7 @@ server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
         message: ""
     }
 
-    ProductModel.findOne({_id: req.params.cid}).then((foundCartItem)=>{
+    CartItemModel.findOne({_id: req.params.cid}).then((foundCartItem)=>{
         if(foundCartItem){
             console.log("Cart Item Found -> Returning Product:" + foundCartItem._id);
 
