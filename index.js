@@ -650,6 +650,40 @@ server.put('/products/:id', (req,res,next) => {//UPDATE PRODUCT
     }
 })
 
+server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
+    
+    console.log("Deleting Product by Id....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+
+    ProductModel.findOneAndDelete({_id: req.params.id}).then((deletedProduct)=>{
+        if(deletedProduct){
+
+            returnMessage.message = "Product Found and Deleted"
+            returnMessage.success = true
+            res.status(200).json(returnMessage);
+                        
+            return next();
+
+        }else{
+                        
+            returnMessage.message = "Delete Failed: Product not Found"
+            res.status(200).json(returnMessage);
+                        
+            return next();
+
+        }
+
+    }).catch((deleteProductError)=>{
+        console.log("An Error occurred while trying to delete Product" + deleteProductError);
+        return res.status(500).json({ error: "ERROR! : " + deleteProductError.errors});
+        //return next(new Error(JSON.stringify("ERROR! " + deleteCartItemError.errors)))
+    });
+
+})
+
 
 //===========================CARTITEMS==================================
 server.get('/cart/:uid', (req,res,next) => {//GET PRODUCT BY ID
