@@ -686,52 +686,75 @@ server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
 
 
 //===========================CARTITEMS==================================
-server.get('/cart/:uid', (req,res,next) => {//GET PRODUCT BY ID
+server.get('/cart/:uid', async (req,res,next) => {//GET PRODUCT BY ID
     
     console.log("Finding Cart Items by User ID...")
     returnMessage = {
         success: false,
         message: ""
     }
-
-    CartItemModel.find({userId: req.params.uid}).then((foundCartItems)=>{
+    try{
+        let foundCartItems = await CartItemModel.find({userId: req.params.uid});//.then((foundCartItems)=>{
         if(foundCartItems){
-            console.log("Found -> " + foundCartItems.size + " Cart Items");
-            
-            // let _product = {
-            //     _id: foundCartItems._id,
-            //     productName: foundCartItems.productName,
-            //     brandName: foundCartItems.brandName,
-            //     shoeType: foundCartItems.shoeType,
-            //     price: foundCartItems.price,
-            //     details: foundCartItems.details,
-            //     imagesArray: foundCartItems.imagesArray,
-            //     sizeArray: doubleSizeArray,//foundProduct.sizeArray,
-            //     shoeColor: foundCartItems.shoeColor,
-            //     shoeSizeText: foundCartItems.shoeSizeText,
-            // };
+            console.log("Found -> " + foundCartItems.length + " Cart Items");
+            let _returnedCartItems = [];
 
-            returnMessage = {
-                success: true,
-                cartItems: foundCartItems
+            for(let i = 0; i < foundCartItems.length - 1; i++){
+
+                let _product = await ProductModel.findOne({_id: foundCartItems[i].productId})//.then((_product)=>{
+                if(_product){
+
+                    let _cartItem = {
+                        product: _product,
+                        userId: foundCartItems[i].userId,
+                        quantity: foundCartItems[i].quantity,
+                        totalPrice: foundCartItems[i].totalPrice
+                    }
+                            
+                    _returnedCartItems.push(_cartItem);
+
+                }else{
+                    returnMessage.message = "Get Cart Item Failed: A Product was not Found"
+                    res.status(200).json(returnMessage);
+                                        
+                    return next();
+                }
+
+                    // }).catch((error)=>{
+                    //     console.log("An Error occurred while get Product information for Id: " + foundCartItems[i].productId + ", Where: " + error);
+                    //     return res.status(500).json({ error: "ERROR! : " + error.errors});
+                    // })
             }
-            res.status(200).json(returnMessage)
 
-            return next();
+                returnMessage = {
+                    success: true,
+                    cartItems: _returnedCartItems
+                }
+                res.status(200).json(returnMessage)
 
-        }else{
+                return next();
 
-            returnMessage.message = "No Cart Items Found"
-            res.status(200).json(returnMessage);
+            }else{
 
-            return next();
+                returnMessage = {
+                    success: true,
+                    cartItems: []
+                }
+                res.status(200).json(returnMessage);
 
+                return next();
+
+            }
+
+        }catch(searchCartItemsError){
+            console.log('An Error occured while trying to find Cart Items with that User ID! : ' + searchCartItemsError);
+            return res.status(500).json({ error: "ERROR! : " + searchCartItemsError.errors});
         }
-    }).catch((searchCartItemsError)=>{
-        console.log('An Error occured while trying to find Cart Items with that User ID! : ' + searchCartItemsError);
-        return res.status(500).json({ error: "ERROR! : " + searchProductsError.errors});
-        //return next(new Error(JSON.stringify("ERROR! " + searchCartItemsError)));
-    })
+    // }).catch((searchCartItemsError)=>{
+    //     console.log('An Error occured while trying to find Cart Items with that User ID! : ' + searchCartItemsError);
+    //     return res.status(500).json({ error: "ERROR! : " + searchCartItemsError.errors});
+    //     //return next(new Error(JSON.stringify("ERROR! " + searchCartItemsError)));
+    // })
 })
 
 server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
