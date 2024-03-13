@@ -705,6 +705,7 @@ server.get('/cart/:uid', async (req,res,next) => {//GET PRODUCT BY ID
                 if(_product){
 
                     let _cartItem = {
+                        _id: foundCartItems[i]._id,
                         product: _product,
                         userId: foundCartItems[i].userId,
                         quantity: foundCartItems[i].quantity,
