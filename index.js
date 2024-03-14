@@ -588,7 +588,7 @@ server.post('/products', imageUpload.array('imageList'), async (req,res,next) =>
 });
 
 
-server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next) => {//UPDATE PRODUCT
+server.put('/products/:id', async (req,res,next) => {//UPDATE PRODUCT
     
     console.log("Updating Product....")
     returnMessage = {
@@ -603,7 +603,7 @@ server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next)
             !req.body.shoeType || 
             !req.body.details || 
             //req.body.imagesArray === undefined || 
-            req.body.sizeArray === undefined || 
+            !req.body.sizeArray || 
             !req.body.shoeColor ||
             !req.body.shoeSizeText) {   
 
@@ -611,55 +611,7 @@ server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next)
                 res.status(200).json(returnMessage);
                 return next();
 
-        }else if (req.files.length === 0) {
-
-            returnMessage.message = "Please Provide New Images";
-            res.status(400).json(returnMessage);
-
-            return next();
-
         }else{
-
-            const productToUpdate = await ProductModel.findById(req.params.id)
-            if(productToUpdate){
-                const imageArray_Update = productToUpdate.imagesArray
-                if(imageArray_Update && imageArray_Update.length != 0){
-                    for(let url of imageArray_Update){
-                        const fileName = url.split('/').pop()
-                        await storage.bucket(bucketName).file(`images/${fileName}`).delete()
-                    }
-
-                    console.log("Old Images Successfully Deleted! Proceeding with Update..")
-                }else{
-                    console.log("No Old Images Found.. Proceeding with Update..")
-                }
-
-                const newImageUrls = [];
-
-                for (const file of req.files){
-                    const imageUUID = uuidv4();
-                    const imageName = `${imageUUID}-${file.originalname}`;
-                    const filePath = `images/${imageName}`;
-
-                    // Upload image to Google Cloud Storage
-                    await storage.bucket(bucketName).upload(file.path, {
-                        destination: filePath,
-                        metadata: {
-                            contentType: file.mimetype,
-                            metadata: {
-                                firebaseStorageDownloadTokens: imageUUID
-                            }
-                        }
-                    });
-
-                    // Get signed URL for the uploaded image
-                    const newImageUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-                    newImageUrls.push(newImageUrl);
-
-                    // Delete the temporary uploaded file
-                    fs.unlinkSync(file.path);
-                };
-
                 const toPrep = (req.body.sizeArray).slice(1,(req.body.sizeArray).length - 1)
                 let doubleSizeArray = toPrep.split(',')
                 doubleSizeArray = doubleSizeArray.map(Number)
@@ -694,21 +646,135 @@ server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next)
                     return next();
 
                 }
-            }else{
-
-                returnMessage.message = "Update Failed: Product not Found"
-                res.status(200).json(returnMessage);
-
-                return next();
-            }
         }
-        
     }catch(updateProductError){
         console.log("An Error occurred while trying to update Product" + updateProductError);
         return res.status(500).json({ error: "ERROR! : " + updateProductError.errors});
         //return next(new Error(JSON.stringify("ERROR! " + updateProductError.errors)))
     }
 })
+
+// server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next) => {//UPDATE PRODUCT
+    
+//     console.log("Updating Product....")
+//     returnMessage = {
+//             success: false,
+//             message: ""
+//     }
+
+//     try{
+//         if (!req.body.productName || 
+//             !req.body.brandName || 
+//             !req.body.price || 
+//             !req.body.shoeType || 
+//             !req.body.details || 
+//             //req.body.imagesArray === undefined || 
+//             req.body.sizeArray === undefined || 
+//             !req.body.shoeColor ||
+//             !req.body.shoeSizeText) {   
+
+//                 returnMessage.message = "Please Provide all required fields "
+//                 res.status(200).json(returnMessage);
+//                 return next();
+
+//         }else if (req.files.length === 0) {
+
+//             returnMessage.message = "Please Provide New Images";
+//             res.status(400).json(returnMessage);
+
+//             return next();
+
+//         }else{
+
+//             const productToUpdate = await ProductModel.findById(req.params.id)
+//             if(productToUpdate){
+//                 const imageArray_Update = productToUpdate.imagesArray
+//                 if(imageArray_Update && imageArray_Update.length != 0){
+//                     for(let url of imageArray_Update){
+//                         const fileName = url.split('/').pop()
+//                         await storage.bucket(bucketName).file(`images/${fileName}`).delete()
+//                     }
+
+//                     console.log("Old Images Successfully Deleted! Proceeding with Update..")
+//                 }else{
+//                     console.log("No Old Images Found.. Proceeding with Update..")
+//                 }
+
+//                 const newImageUrls = [];
+
+//                 for (const file of req.files){
+//                     const imageUUID = uuidv4();
+//                     const imageName = `${imageUUID}-${file.originalname}`;
+//                     const filePath = `images/${imageName}`;
+
+//                     // Upload image to Google Cloud Storage
+//                     await storage.bucket(bucketName).upload(file.path, {
+//                         destination: filePath,
+//                         metadata: {
+//                             contentType: file.mimetype,
+//                             metadata: {
+//                                 firebaseStorageDownloadTokens: imageUUID
+//                             }
+//                         }
+//                     });
+
+//                     // Get signed URL for the uploaded image
+//                     const newImageUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
+//                     newImageUrls.push(newImageUrl);
+
+//                     // Delete the temporary uploaded file
+//                     fs.unlinkSync(file.path);
+//                 };
+
+//                 const toPrep = (req.body.sizeArray).slice(1,(req.body.sizeArray).length - 1)
+//                 let doubleSizeArray = toPrep.split(',')
+//                 doubleSizeArray = doubleSizeArray.map(Number)
+//                 doubleSizeArray = doubleSizeArray.map(size => size.toFixed(1))
+
+//                 let toEditProduct = {
+//                     productName: req.body.productName, 
+//                     brandName: req.body.brandName, 
+//                     shoeType: req.body.shoeType,
+//                     price: req.body.price, 
+//                     details: req.body.details,
+//                     imagesArray: req.body.imagesArray, 
+//                     sizeArray: doubleSizeArray, 
+//                     shoeColor: req.body.shoeColor,
+//                     shoeSizeText: req.body.shoeSizeText,
+//                 };
+
+//                 const toUpdateProduct = await ProductModel.findOneAndUpdate({_id: req.params.id}, toEditProduct, {new:true})//.then((toUpdateProduct)=>{
+//                 if(toUpdateProduct){
+
+//                     returnMessage.message = "Product Found and Updated"
+//                     returnMessage.success = true
+//                     res.status(200).json(returnMessage);
+
+//                     return next();
+
+//                 }else{
+
+//                     returnMessage.message = "Update Failed: Product not Found"
+//                     res.status(200).json(returnMessage);
+
+//                     return next();
+
+//                 }
+//             }else{
+
+//                 returnMessage.message = "Update Failed: Product not Found"
+//                 res.status(200).json(returnMessage);
+
+//                 return next();
+//             }
+//         }
+
+//     }catch(updateProductError){
+//         console.log("An Error occurred while trying to update Product" + updateProductError);
+//         return res.status(500).json({ error: "ERROR! : " + updateProductError.errors});
+//         //return next(new Error(JSON.stringify("ERROR! " + updateProductError.errors)))
+//     }
+// })
 
 server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
     
