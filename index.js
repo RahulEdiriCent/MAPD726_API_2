@@ -70,9 +70,18 @@ const cartItemSchema = new mongoose.Schema({
     totalPrice: Number
 });
 
+const orderTrackingSchema = new mongoose.Schema({
+    productId: String,
+    userId: String,
+    quantity: Number,
+    totalPrice: Number,
+    status: String
+});
+
 let UserModel = mongoose.model('Users', userSchema);
 let ProductModel = mongoose.model('Products', productSchema);
 let CartItemModel = mongoose.model('CartItems', cartItemSchema);
+let OrderModel = mongoose.model('Orders', orderTrackingSchema);
 
 server.use(express.json());
 
@@ -654,127 +663,7 @@ server.put('/products/:id', async (req,res,next) => {//UPDATE PRODUCT
     }
 })
 
-// server.put('/products/:id', imageUpload.array('imageList'), async (req,res,next) => {//UPDATE PRODUCT
-    
-//     console.log("Updating Product....")
-//     returnMessage = {
-//             success: false,
-//             message: ""
-//     }
 
-//     try{
-//         if (!req.body.productName || 
-//             !req.body.brandName || 
-//             !req.body.price || 
-//             !req.body.shoeType || 
-//             !req.body.details || 
-//             //req.body.imagesArray === undefined || 
-//             req.body.sizeArray === undefined || 
-//             !req.body.shoeColor ||
-//             !req.body.shoeSizeText) {   
-
-//                 returnMessage.message = "Please Provide all required fields "
-//                 res.status(200).json(returnMessage);
-//                 return next();
-
-//         }else if (req.files.length === 0) {
-
-//             returnMessage.message = "Please Provide New Images";
-//             res.status(400).json(returnMessage);
-
-//             return next();
-
-//         }else{
-
-//             const productToUpdate = await ProductModel.findById(req.params.id)
-//             if(productToUpdate){
-//                 const imageArray_Update = productToUpdate.imagesArray
-//                 if(imageArray_Update && imageArray_Update.length != 0){
-//                     for(let url of imageArray_Update){
-//                         const fileName = url.split('/').pop()
-//                         await storage.bucket(bucketName).file(`images/${fileName}`).delete()
-//                     }
-
-//                     console.log("Old Images Successfully Deleted! Proceeding with Update..")
-//                 }else{
-//                     console.log("No Old Images Found.. Proceeding with Update..")
-//                 }
-
-//                 const newImageUrls = [];
-
-//                 for (const file of req.files){
-//                     const imageUUID = uuidv4();
-//                     const imageName = `${imageUUID}-${file.originalname}`;
-//                     const filePath = `images/${imageName}`;
-
-//                     // Upload image to Google Cloud Storage
-//                     await storage.bucket(bucketName).upload(file.path, {
-//                         destination: filePath,
-//                         metadata: {
-//                             contentType: file.mimetype,
-//                             metadata: {
-//                                 firebaseStorageDownloadTokens: imageUUID
-//                             }
-//                         }
-//                     });
-
-//                     // Get signed URL for the uploaded image
-//                     const newImageUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
-//                     newImageUrls.push(newImageUrl);
-
-//                     // Delete the temporary uploaded file
-//                     fs.unlinkSync(file.path);
-//                 };
-
-//                 const toPrep = (req.body.sizeArray).slice(1,(req.body.sizeArray).length - 1)
-//                 let doubleSizeArray = toPrep.split(',')
-//                 doubleSizeArray = doubleSizeArray.map(Number)
-//                 doubleSizeArray = doubleSizeArray.map(size => size.toFixed(1))
-
-//                 let toEditProduct = {
-//                     productName: req.body.productName, 
-//                     brandName: req.body.brandName, 
-//                     shoeType: req.body.shoeType,
-//                     price: req.body.price, 
-//                     details: req.body.details,
-//                     imagesArray: req.body.imagesArray, 
-//                     sizeArray: doubleSizeArray, 
-//                     shoeColor: req.body.shoeColor,
-//                     shoeSizeText: req.body.shoeSizeText,
-//                 };
-
-//                 const toUpdateProduct = await ProductModel.findOneAndUpdate({_id: req.params.id}, toEditProduct, {new:true})//.then((toUpdateProduct)=>{
-//                 if(toUpdateProduct){
-
-//                     returnMessage.message = "Product Found and Updated"
-//                     returnMessage.success = true
-//                     res.status(200).json(returnMessage);
-
-//                     return next();
-
-//                 }else{
-
-//                     returnMessage.message = "Update Failed: Product not Found"
-//                     res.status(200).json(returnMessage);
-
-//                     return next();
-
-//                 }
-//             }else{
-
-//                 returnMessage.message = "Update Failed: Product not Found"
-//                 res.status(200).json(returnMessage);
-
-//                 return next();
-//             }
-//         }
-
-//     }catch(updateProductError){
-//         console.log("An Error occurred while trying to update Product" + updateProductError);
-//         return res.status(500).json({ error: "ERROR! : " + updateProductError.errors});
-//         //return next(new Error(JSON.stringify("ERROR! " + updateProductError.errors)))
-//     }
-// })
 
 server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
     
@@ -812,7 +701,7 @@ server.delete('/products/:id', (req,res,next) => {//UPDATE PRODUCT
 
 
 //===========================CARTITEMS==================================
-server.get('/cart/:uid', async (req,res,next) => {//GET PRODUCT BY ID
+server.get('/cart/:uid', async (req,res,next) => {//GET Cart Items BY ID
     
     console.log("Finding Cart Items by User ID...")
     returnMessage = {
@@ -841,7 +730,7 @@ server.get('/cart/:uid', async (req,res,next) => {//GET PRODUCT BY ID
                     _returnedCartItems.push(_cartItem);
 
                 }else{
-                    returnMessage.message = "Get Cart Item Failed: A Product was not Found"
+                    returnMessage.message = "Getting Cart Items Failed: A Cart Item was not Found - " + foundCartItems[i].productId
                     res.status(200).json(returnMessage);
                                         
                     return next();
@@ -884,7 +773,7 @@ server.get('/cart/:uid', async (req,res,next) => {//GET PRODUCT BY ID
     // })
 })
 
-server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
+server.get('/cartitems/:cid', (req,res,next) => {//GET CART ITEM BY ID
     
     console.log("Finding Cart Item by ID...")
     returnMessage = {
@@ -894,7 +783,7 @@ server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
 
     CartItemModel.findOne({_id: req.params.cid}).then((foundCartItem)=>{
         if(foundCartItem){
-            console.log("Cart Item Found -> Returning Product:" + foundCartItem._id);
+            console.log("Cart Item Found -> Returning Cart Item:" + foundCartItem._id);
 
             let _cartItem = {
                 _id: foundCartItem._id,
@@ -906,7 +795,7 @@ server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
 
             returnMessage = {
                 success: true,
-                product: _cartItem
+                cartItem: _cartItem
             }
             res.status(200).json(returnMessage)
 
@@ -927,7 +816,7 @@ server.get('/cartitems/:cid', (req,res,next) => {//GET PRODUCT BY ID
     })
 })
 
-server.post('/cartitems', (req,res,next) => {//ADD PRODUCT
+server.post('/cartitems', (req,res,next) => {//ADD CART ITEM
     
     console.log("Adding Cart Item....")
     returnMessage = {
@@ -972,7 +861,7 @@ server.post('/cartitems', (req,res,next) => {//ADD PRODUCT
     }
 })
 
-server.put('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
+server.put('/cartitems/:cid', (req,res,next) => {//UPDATE CART ITEM
     
     console.log("Updating CartItem....")
     returnMessage = {
@@ -1021,7 +910,7 @@ server.put('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
     }
 })
 
-server.delete('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
+server.delete('/cartitems/:cid', (req,res,next) => {//DELETE CART ITEM
     
     console.log("Deleting Cart Item by Id....")
     returnMessage = {
@@ -1054,6 +943,333 @@ server.delete('/cartitems/:cid', (req,res,next) => {//UPDATE PRODUCT
     });
 
 })
+//========================================================================
+
+//===========================ORDERS==================================
+server.get('/orderlist/:uid', async (req,res,next) => {//GET ORDERS BY USER ID
+    
+    console.log("Finding Order Items by User ID...")
+    returnMessage = {
+        success: false,
+        message: ""
+    }
+    try{
+        let foundOrderList = await OrderModel.find({userId: req.params.uid});
+        if(foundOrderList){
+            console.log("Found -> " + foundOrderList.length + " Orders");
+            let _returnedOrderList = [];
+
+            for(let i = 0; i < foundOrderList.length - 1; i++){
+
+                let foundOrder = await OrderModel.findOne({_id: foundOrderList[i].productId})
+                if(foundOrder){
+
+                    let _order = {
+                        _id: foundOrderList[i]._id,
+                        product: foundOrder,
+                        userId: foundOrderList[i].userId,
+                        quantity: foundOrderList[i].quantity,
+                        totalPrice: foundOrderList[i].totalPrice,
+                        status: foundOrderList[i].status
+                    }
+                            
+                    _returnedOrderList.push(_order);
+
+                }else{
+                    returnMessage.message = "Getting Order List Failed: A Order was not Found - " + foundOrderList[i].productId
+                    res.status(200).json(returnMessage);
+                                        
+                    return next();
+                }
+            }
+
+                returnMessage = {
+                    success: true,
+                    orders: _returnedOrderList
+                }
+                res.status(200).json(returnMessage)
+
+                return next();
+
+            }else{
+
+                returnMessage = {
+                    success: true,
+                    orders: []
+                }
+                res.status(200).json(returnMessage);
+
+                return next();
+
+            }
+
+        }catch(searchForOrderList){
+            console.log('An Error occured while trying to find Cart Items with that User ID! : ' + searchForOrderList);
+            return res.status(500).json({ error: "ERROR! : " + searchForOrderList.errors});
+        }
+})
+
+server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
+    
+    console.log("Finding Order by ID...")
+    returnMessage = {
+        success: false,
+        message: ""
+    }
+
+    OrderModel.findOne({_id: req.params.cid}).then((foundOrder)=>{
+        if(foundOrder){
+            console.log("Order Found -> Returning Order:" + foundOrder._id);
+
+            let _order = {
+                _id: foundOrder._id,
+                userId: foundOrder.userId,
+                productId: foundOrder.productId,
+                quantity: foundOrder.quantity,
+                totalPrice: foundOrder.totalPrice,
+                status: foundOrder.status
+            };
+
+            returnMessage = {
+                success: true,
+                order: _order
+            }
+            res.status(200).json(returnMessage)
+
+            return next();
+
+        }else{
+
+            returnMessage.message = "Order not Found"
+            res.status(200).json(returnMessage);
+
+            return next();
+
+        }
+    }).catch((searchOrderError)=>{
+        console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
+        return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
+    })
+})
+
+server.post('/orders', (req,res,next) => {//ADD ORDER
+    
+    console.log("Adding Order....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+
+    
+    if (!req.body.productId || 
+        !req.body.userId || 
+        !req.body.totalPrice || 
+        !req.body.quantity ||
+        !req.body.status) {            
+
+            returnMessage.message = "Please provide all required fields "
+            res.status(200).json(returnMessage);
+
+            return next();
+
+    }else{
+        let toAddOrder = new OrderModel({
+            userId: req.body.userId,
+            productId: req.body.productId,
+            quantity: req.body.quantity,
+            totalPrice: req.body.totalPrice,
+            status: req.body.status
+        });
+
+        toAddOrder.save().then((addedOrder)=>{
+        console.log("Successfully Added Order:" + addedOrder._id);
+    
+        returnMessage.success = true
+        returnMessage.message = "Order Successfully Added"
+    
+        res.status(200).json(returnMessage);
+        return next();
+    
+        }).catch((addOrderError)=>{
+            console.log('An Error occured while trying to add Order: ' + addOrderError);
+            return res.status(500).json({ error: "ERROR! : " + addOrderError.errors});
+        });
+
+    }
+})
+
+server.post('/checkout/:uid', async (req,res,next) => {//CHECK USER CART : CART ITEMS TO ORDER
+    console.log("Checking out Cart Items to Orders....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+    let newOrders;
+    try{
+        let foundCartItems = await CartItemModel.find({userId: req.params.uid});
+        if(foundCartItems){
+            newOrders = await Promise.all(foundCartItems.map(async (cartItem)=> {
+
+                let _order = new OrderModel({
+                    userId: cartItem.userId,
+                    productId: cartItem.productId,
+                    quantity: cartItem.quantity,
+                    totalPrice: cartItem.totalPrice,
+                    status: "Not Delivered"
+                })
+                await _order.save();
+                return _order
+            }));
+
+            await CartItemModel.deleteMany({userId: req.params.uid})
+            returnMessage.message = foundCartItems.length + "Cart Items Checked Out, Orders Made as Not Delivered Successfully"
+                res.status(200).json(returnMessage);
+                                    
+                return next();
+            }else{
+                returnMessage.message = "Getting Cart Items Failed: Unable to Check out"
+                res.status(200).json(returnMessage);
+                                    
+                return next();
+            }
+
+        }catch(checkoutError){
+
+            await  Promise.all(newOrders.map(async (retractedOrder)=>{
+                await OrderModel.deleteOne({_id: retractedOrder._id});
+            }));
+            
+            console.log('An Error occured while trying to Check out for User ID! : ' + req.params.uid + 'As' + checkoutError);
+            return res.status(500).json({ error: "ERROR! : " + checkoutError.errors});
+        }
+
+});
+
+server.put('/orders/:oid', (req,res,next) => {//UPDATE ORDER
+    
+    console.log("Updating Order....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+
+    if (!req.body.productId || 
+        !req.body.userId || 
+        !req.body.totalPrice || 
+        !req.body.quantity ||
+        !req.body.status) {            
+            returnMessage.message = "Please provide all required fields "
+            res.status(200).json(returnMessage);
+            return next();
+
+    }else{
+        let toEditOrder = {
+            userId: req.body.userId,
+            productId: req.body.productId,
+            quantity: req.body.quantity,
+            totalPrice: req.body.totalPrice,
+            status: req.body.status
+        };
+
+        CartItemModel.findOneAndUpdate({_id: req.params.oid}, toEditOrder, {new:true}).then((toUpdateOrder)=>{
+            if(toUpdateOrder){
+
+                        returnMessage.message = "Order Found and Updated"
+                        returnMessage.success = true
+                        res.status(200).json(returnMessage);
+
+                        return next();
+
+            }else{
+
+                        returnMessage.message = "Update Failed: Order not Found"
+                        res.status(200).json(returnMessage);
+
+                        return next();
+            }
+
+        }).catch((updateOrderError)=>{
+            console.log("An Error occurred while trying to update Cart Item" + updateOrderError);
+            return res.status(500).json({ error: "ERROR! : " + updateOrderError.errors});
+        });
+    }
+})
+
+server.put('/orderstatus/:oid', (req,res,next) => {//UPDATE ORDER STATUS
+    
+    console.log("Updating Order Status....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+
+    if (!req.body.status) {            
+            returnMessage.message = "Please provide new Order Status"
+            res.status(200).json(returnMessage);
+            return next();
+
+    }else{
+        let toEditOrder_Status = {
+            status: req.body.status
+        };
+
+        OrderModel.findOneAndUpdate({_id: req.params.oid}, toEditOrder_Status, {new:true}).then((toUpdateOrder_Status)=>{
+            if(toUpdateOrder_Status){
+
+                        returnMessage.message = "Order Found and its Status was Updated"
+                        returnMessage.success = true
+                        res.status(200).json(returnMessage);
+
+                        return next();
+
+            }else{
+
+                        returnMessage.message = "Update Failed: Order not Found"
+                        res.status(200).json(returnMessage);
+
+                        return next();
+            }
+
+        }).catch((updateOrderStatusError)=>{
+            console.log("An Error occurred while trying to update Order Status" + updateOrderStatusError);
+            return res.status(500).json({ error: "ERROR! : " + updateOrderStatusError.errors});
+        });
+    }
+})
+
+server.delete('/orders/:oid', (req,res,next) => {//DELETE ORDER
+    
+    console.log("Deleting Order by Id....")
+    returnMessage = {
+            success: false,
+            message: ""
+    }
+
+    OrderModel.findOneAndDelete({_id: req.params.oid}).then((deletedOrder)=>{
+        if(deletedOrder){
+
+            returnMessage.message = "Order Found and Deleted"
+            returnMessage.success = true
+            res.status(200).json(returnMessage);
+                        
+            return next();
+
+        }else{
+                        
+            returnMessage.message = "Delete Failed: Order not Found"
+            res.status(200).json(returnMessage);
+                        
+            return next();
+
+        }
+
+    }).catch((deleteOrderError)=>{
+        console.log("An Error occurred while trying to delete Order" + deleteOrderError);
+        return res.status(500).json({ error: "ERROR! : " + deleteOrderError.errors});
+    });
+
+})
+//==========================================================================
 
 //START SERVER
 server.listen(PORT, HOST, () => {
