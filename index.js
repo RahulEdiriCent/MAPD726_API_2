@@ -1037,7 +1037,7 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
 
                     let _order = {
                         _id: foundOrder._id,
-                        user: f_user,
+                        user: _user,
                         productId: foundOrder.productId,
                         quantity: foundOrder.quantity,
                         totalPrice: foundOrder.totalPrice,
