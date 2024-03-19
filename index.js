@@ -1129,7 +1129,8 @@ server.post('/checkout/:uid', async (req,res,next) => {//CHECK USER CART : CART 
             }));
 
             await CartItemModel.deleteMany({userId: req.params.uid})
-            returnMessage.message = foundCartItems.length + "Cart Items Checked Out, Orders Made as Not Delivered Successfully"
+                returnMessage.success = true
+                returnMessage.message = foundCartItems.length + " Cart Items Checked Out, Orders Made (as Not Delivered) Successfully"
                 res.status(200).json(returnMessage);
                                     
                 return next();
