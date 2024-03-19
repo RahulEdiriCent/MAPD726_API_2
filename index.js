@@ -1022,25 +1022,40 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
     OrderModel.findOne({_id: req.params.cid}).then((foundOrder)=>{
         if(foundOrder){
             console.log("Order Found -> Returning Order:" + foundOrder._id);
+            
+            UserModel.findOne({_id: foundOrder.userId}).then((foundUser)=>{
+                if(foundUser){
+                    let _order = {
+                        _id: foundOrder._id,
+                        user: foundUser,
+                        productId: foundOrder.productId,
+                        quantity: foundOrder.quantity,
+                        totalPrice: foundOrder.totalPrice,
+                        status: foundOrder.status,
+                        creationDate: foundOrder.creationDate,
+                        updateDate: foundOrder.updateDate
+                    };
+        
+                    returnMessage = {
+                        success: true,
+                        order: _order
+                    }
+                    res.status(200).json(returnMessage)
+        
+                    return next();
 
-            let _order = {
-                _id: foundOrder._id,
-                userId: foundOrder.userId,
-                productId: foundOrder.productId,
-                quantity: foundOrder.quantity,
-                totalPrice: foundOrder.totalPrice,
-                status: foundOrder.status,
-                creationDate: foundOrder.creationDate,
-                updateDate: foundOrder.updateDate
-            };
+                }else{
 
-            returnMessage = {
-                success: true,
-                order: _order
-            }
-            res.status(200).json(returnMessage)
+                    returnMessage.message = "User for Order not Found"
+                    res.status(200).json(returnMessage);
 
-            return next();
+                    return next();
+
+                }
+            }).catch((searchOrderError)=>{
+                console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
+                return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
+            })
 
         }else{
 
