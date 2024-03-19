@@ -1019,7 +1019,7 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
         message: ""
     }
 
-    OrderModel.findOne({_id: req.params.cid}).then((foundOrder)=>{
+    OrderModel.findOne({_id: req.params.oid}).then((foundOrder)=>{
         if(foundOrder){
             console.log("Order Found -> Returning Order:" + foundOrder._id);
             
