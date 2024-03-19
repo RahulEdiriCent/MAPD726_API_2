@@ -1025,9 +1025,19 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
             
             UserModel.findOne({_id: foundOrder.userId}).then((foundUser)=>{
                 if(foundUser){
+                    let _user = {
+                        _id: foundUser._id,
+                        firstName: foundUser.firstName,
+                        lastName: foundUser.lastName,
+                        email: foundUser.email,
+                        gender: foundUser.gender,
+                        phoneNumber: foundUser.phoneNumber,
+                        address: foundUser.address,
+                    };
+
                     let _order = {
                         _id: foundOrder._id,
-                        user: foundUser,
+                        user: f_user,
                         productId: foundOrder.productId,
                         quantity: foundOrder.quantity,
                         totalPrice: foundOrder.totalPrice,
