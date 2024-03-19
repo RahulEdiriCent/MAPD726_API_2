@@ -75,7 +75,9 @@ const orderTrackingSchema = new mongoose.Schema({
     userId: String,
     quantity: Number,
     totalPrice: Number,
-    status: String
+    status: String,
+    creationDate: String,
+    updateDate: String
 });
 
 let UserModel = mongoose.model('Users', userSchema);
@@ -1027,7 +1029,9 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
                 productId: foundOrder.productId,
                 quantity: foundOrder.quantity,
                 totalPrice: foundOrder.totalPrice,
-                status: foundOrder.status
+                status: foundOrder.status,
+                creationDate: foundOrder.creationDate,
+                updateDate: foundOrder.updateDate
             };
 
             returnMessage = {
@@ -1052,51 +1056,51 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
     })
 })
 
-server.post('/orders', (req,res,next) => {//ADD ORDER
+// server.post('/orders', (req,res,next) => {//ADD ORDER
     
-    console.log("Adding Order....")
-    returnMessage = {
-            success: false,
-            message: ""
-    }
+//     console.log("Adding Order....")
+//     returnMessage = {
+//             success: false,
+//             message: ""
+//     }
 
     
-    if (!req.body.productId || 
-        !req.body.userId || 
-        !req.body.totalPrice || 
-        !req.body.quantity ||
-        !req.body.status) {            
+//     if (!req.body.productId || 
+//         !req.body.userId || 
+//         !req.body.totalPrice || 
+//         !req.body.quantity ||
+//         !req.body.status) {            
 
-            returnMessage.message = "Please provide all required fields "
-            res.status(200).json(returnMessage);
+//             returnMessage.message = "Please provide all required fields "
+//             res.status(200).json(returnMessage);
 
-            return next();
+//             return next();
 
-    }else{
-        let toAddOrder = new OrderModel({
-            userId: req.body.userId,
-            productId: req.body.productId,
-            quantity: req.body.quantity,
-            totalPrice: req.body.totalPrice,
-            status: req.body.status
-        });
+//     }else{
+//         let toAddOrder = new OrderModel({
+//             userId: req.body.userId,
+//             productId: req.body.productId,
+//             quantity: req.body.quantity,
+//             totalPrice: req.body.totalPrice,
+//             status: req.body.status
+//         });
 
-        toAddOrder.save().then((addedOrder)=>{
-        console.log("Successfully Added Order:" + addedOrder._id);
+//         toAddOrder.save().then((addedOrder)=>{
+//         console.log("Successfully Added Order:" + addedOrder._id);
     
-        returnMessage.success = true
-        returnMessage.message = "Order Successfully Added"
+//         returnMessage.success = true
+//         returnMessage.message = "Order Successfully Added"
     
-        res.status(200).json(returnMessage);
-        return next();
+//         res.status(200).json(returnMessage);
+//         return next();
     
-        }).catch((addOrderError)=>{
-            console.log('An Error occured while trying to add Order: ' + addOrderError);
-            return res.status(500).json({ error: "ERROR! : " + addOrderError.errors});
-        });
+//         }).catch((addOrderError)=>{
+//             console.log('An Error occured while trying to add Order: ' + addOrderError);
+//             return res.status(500).json({ error: "ERROR! : " + addOrderError.errors});
+//         });
 
-    }
-})
+//     }
+// })
 
 server.post('/checkout/:uid', async (req,res,next) => {//CHECK USER CART : CART ITEMS TO ORDER
     console.log("Checking out Cart Items to Orders....")
@@ -1109,13 +1113,16 @@ server.post('/checkout/:uid', async (req,res,next) => {//CHECK USER CART : CART 
         let foundCartItems = await CartItemModel.find({userId: req.params.uid});
         if(foundCartItems){
             newOrders = await Promise.all(foundCartItems.map(async (cartItem)=> {
-
+                
+                const currentDate = new Date();
                 let _order = new OrderModel({
                     userId: cartItem.userId,
                     productId: cartItem.productId,
                     quantity: cartItem.quantity,
                     totalPrice: cartItem.totalPrice,
-                    status: "Not Delivered"
+                    status: "Not Delivered",
+                    creationDate: currentDate.toDateString(),
+                    updateDate: "---"
                 })
                 await _order.save();
                 return _order
@@ -1138,7 +1145,7 @@ server.post('/checkout/:uid', async (req,res,next) => {//CHECK USER CART : CART 
             await  Promise.all(newOrders.map(async (retractedOrder)=>{
                 await OrderModel.deleteOne({_id: retractedOrder._id});
             }));
-            
+
             console.log('An Error occured while trying to Check out for User ID! : ' + req.params.uid + 'As' + checkoutError);
             return res.status(500).json({ error: "ERROR! : " + checkoutError.errors});
         }
@@ -1163,12 +1170,15 @@ server.put('/orders/:oid', (req,res,next) => {//UPDATE ORDER
             return next();
 
     }else{
+        const currentDate = new Date();
         let toEditOrder = {
             userId: req.body.userId,
             productId: req.body.productId,
             quantity: req.body.quantity,
             totalPrice: req.body.totalPrice,
-            status: req.body.status
+            status: req.body.status,
+            creationDate: req.body.status.creationDate,
+            updateDate: currentDate.toDateString()
         };
 
         CartItemModel.findOneAndUpdate({_id: req.params.oid}, toEditOrder, {new:true}).then((toUpdateOrder)=>{
@@ -1209,8 +1219,10 @@ server.put('/orderstatus/:oid', (req,res,next) => {//UPDATE ORDER STATUS
             return next();
 
     }else{
+        const currentDate = new Date();
         let toEditOrder_Status = {
-            status: req.body.status
+            status: req.body.status,
+            updateDate: currentDate.toDateString()
         };
 
         OrderModel.findOneAndUpdate({_id: req.params.oid}, toEditOrder_Status, {new:true}).then((toUpdateOrder_Status)=>{
