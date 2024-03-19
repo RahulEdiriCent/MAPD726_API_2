@@ -1203,7 +1203,7 @@ server.put('/orders/:oid', (req,res,next) => {//UPDATE ORDER
             quantity: req.body.quantity,
             totalPrice: req.body.totalPrice,
             status: req.body.status,
-            creationDate: req.body.status.creationDate,
+            //creationDate: req.body.status.creationDate,
             updateDate: currentDate.toDateString()
         };
 
