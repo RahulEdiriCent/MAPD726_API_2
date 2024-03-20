@@ -961,7 +961,7 @@ server.get('/orderlist/:uid', async (req,res,next) => {//GET ORDERS BY USER ID
             console.log("Found -> " + foundOrderList.length + " Orders");
             let _returnedOrderList = [];
 
-            for(let i = 0; i < foundOrderList.length - 1; i++){
+            for(let i = 0; i < foundOrderList.length; i++){
 
                 let foundProduct = await ProductModel.findOne({_id: foundOrderList[i].productId})
                 if(foundProduct){
@@ -1094,7 +1094,7 @@ server.get('/orders', async (req,res,next) => {//GET ORDER BY ID
             if(foundOrders){
                 console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
 
-                for(let i = 0; i < foundOrders.length - 1; i++){
+                for(let i = 0; i < foundOrders.length; i++){
                 //console.log("is: " + i)
                     let foundProduct = await ProductModel.findOne({_id: foundOrders[i].productId})
                     if(foundProduct){
