@@ -716,7 +716,7 @@ server.get('/cart/:uid', async (req,res,next) => {//GET Cart Items BY ID
             console.log("Found -> " + foundCartItems.length + " Cart Items");
             let _returnedCartItems = [];
 
-            for(let i = 0; i < foundCartItems.length - 1; i++){
+            for(let i = 0; i < foundCartItems.length; i++){
 
                 let _product = await ProductModel.findOne({_id: foundCartItems[i].productId})//.then((_product)=>{
                 if(_product){
