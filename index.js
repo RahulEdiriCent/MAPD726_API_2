@@ -963,12 +963,12 @@ server.get('/orderlist/:uid', async (req,res,next) => {//GET ORDERS BY USER ID
 
             for(let i = 0; i < foundOrderList.length - 1; i++){
 
-                let foundOrder = await OrderModel.findOne({_id: foundOrderList[i].productId})
-                if(foundOrder){
+                let foundProduct = await ProductModel.findOne({_id: foundOrderList[i].productId})
+                if(foundProduct){
 
                     let _order = {
                         _id: foundOrderList[i]._id,
-                        product: foundOrder,
+                        product: foundProduct,
                         userId: foundOrderList[i].userId,
                         quantity: foundOrderList[i].quantity,
                         totalPrice: foundOrderList[i].totalPrice,
@@ -978,7 +978,7 @@ server.get('/orderlist/:uid', async (req,res,next) => {//GET ORDERS BY USER ID
                     _returnedOrderList.push(_order);
 
                 }else{
-                    returnMessage.message = "Getting Order List Failed: A Order was not Found - " + foundOrderList[i].productId
+                    returnMessage.message = "Getting Order List Failed: A Product for an Order was not Found - " + foundOrderList[i].productId
                     res.status(200).json(returnMessage);
                                         
                     return next();
@@ -1006,8 +1006,8 @@ server.get('/orderlist/:uid', async (req,res,next) => {//GET ORDERS BY USER ID
             }
 
         }catch(searchForOrderList){
-            console.log('An Error occured while trying to find Cart Items with that User ID! : ' + searchForOrderList);
-            return res.status(500).json({ error: "ERROR! : " + searchForOrderList.errors});
+            console.log('An Error occured while trying to find Orders with that User ID! : ' + searchForOrderList);
+            return res.status(500).json({ error: "ERROR! : " + searchForOrderList});
         }
 })
 
@@ -1044,6 +1044,76 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
                         status: foundOrder.status,
                         creationDate: foundOrder.creationDate,
                         updateDate: foundOrder.updateDate
+                    };
+        
+                    returnMessage = {
+                        success: true,
+                        order: _order
+                    }
+                    res.status(200).json(returnMessage)
+        
+                    return next();
+
+                }else{
+
+                    returnMessage.message = "User for Order not Found"
+                    res.status(200).json(returnMessage);
+
+                    return next();
+
+                }
+            }).catch((searchOrderError)=>{
+                console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
+                return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
+            })
+
+        }else{
+
+            returnMessage.message = "Order not Found"
+            res.status(200).json(returnMessage);
+
+            return next();
+
+        }
+    }).catch((searchOrderError)=>{
+        console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
+        return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
+    })
+})
+
+server.get('/orders', (req,res,next) => {//GET ORDER BY ID
+    
+    console.log("Fetching All Orders...")
+    returnMessage = {
+        success: false,
+        message: ""
+    }
+
+    OrderModel.find({}).then((foundOrders)=>{
+        if(foundOrders){
+            console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
+            
+            UserModel.findOne({_id: foundOrders.userId}).then((foundUser)=>{
+                if(foundUser){
+                    let _user = {
+                        _id: foundUser._id,
+                        firstName: foundUser.firstName,
+                        lastName: foundUser.lastName,
+                        email: foundUser.email,
+                        gender: foundUser.gender,
+                        phoneNumber: foundUser.phoneNumber,
+                        address: foundUser.address,
+                    };
+
+                    let _order = {
+                        _id: foundOrders._id,
+                        user: _user,
+                        productId: foundOrders.productId,
+                        quantity: foundOrders.quantity,
+                        totalPrice: foundOrders.totalPrice,
+                        status: foundOrders.status,
+                        creationDate: foundOrders.creationDate,
+                        updateDate: foundOrders.updateDate
                     };
         
                     returnMessage = {
