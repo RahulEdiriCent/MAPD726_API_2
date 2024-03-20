@@ -1145,7 +1145,7 @@ server.get('/orders', async (req,res,next) => {//GET ORDER BY ID
 
                 returnMessage = {
                     success: true,
-                    orders: foundOrders
+                    orders: _returnedOrderList
                 }
                 res.status(200).json(returnMessage)
 
