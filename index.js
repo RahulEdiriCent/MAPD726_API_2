@@ -1092,62 +1092,23 @@ server.get('/orders', (req,res,next) => {//GET ORDER BY ID
     OrderModel.find({}).then((foundOrders)=>{
         if(foundOrders){
             console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
-            
-            UserModel.findOne({_id: foundOrders.userId}).then((foundUser)=>{
-                if(foundUser){
-                    let _user = {
-                        _id: foundUser._id,
-                        firstName: foundUser.firstName,
-                        lastName: foundUser.lastName,
-                        email: foundUser.email,
-                        gender: foundUser.gender,
-                        phoneNumber: foundUser.phoneNumber,
-                        address: foundUser.address,
-                    };
-
-                    let _order = {
-                        _id: foundOrders._id,
-                        user: _user,
-                        productId: foundOrders.productId,
-                        quantity: foundOrders.quantity,
-                        totalPrice: foundOrders.totalPrice,
-                        status: foundOrders.status,
-                        creationDate: foundOrders.creationDate,
-                        updateDate: foundOrders.updateDate
-                    };
-        
-                    returnMessage = {
-                        success: true,
-                        order: _order
-                    }
-                    res.status(200).json(returnMessage)
-        
-                    return next();
-
-                }else{
-
-                    returnMessage.message = "User for Order not Found"
-                    res.status(200).json(returnMessage);
-
-                    return next();
-
-                }
-            }).catch((searchOrderError)=>{
-                console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
-                return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
-            })
+            returnMessage = {
+                success: true,
+                orders: foundOrders
+            }
+            res.status(200).json(returnMessage)
 
         }else{
 
-            returnMessage.message = "Order not Found"
+            returnMessage.message = "No Orders Found"
             res.status(200).json(returnMessage);
 
             return next();
 
         }
-    }).catch((searchOrderError)=>{
-        console.log('An Error occured while trying to find Order with that ID! : ' + searchOrderError);
-        return res.status(500).json({ error: "ERROR! : " + searchOrderError.errors});
+    }).catch((getAllOrdersError)=>{
+        console.log('An Error occured while trying to fetch All Orders! : ' + getAllOrdersError);
+        return res.status(500).json({ error: "ERROR! : " + getAllOrdersError.errors});
     })
 })
 
