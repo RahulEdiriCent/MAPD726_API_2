@@ -1090,14 +1090,12 @@ server.get('/orders', async (req,res,next) => {//GET ORDER BY ID
     }
     try{
         let _returnedOrderList = [];
-        let foundOrders = OrderModel.find({})//.then((foundOrders)=>{
+        let foundOrders = await OrderModel.find({})//.then((foundOrders)=>{
             if(foundOrders){
                 console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
 
-                
-
                 for(let i = 0; i < foundOrders.length - 1; i++){
-
+                //console.log("is: " + i)
                     let foundProduct = await ProductModel.findOne({_id: foundOrders[i].productId})
                     if(foundProduct){
 
