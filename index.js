@@ -1081,35 +1081,89 @@ server.get('/orders/:oid', (req,res,next) => {//GET ORDER BY ID
     })
 })
 
-server.get('/orders', (req,res,next) => {//GET ORDER BY ID
+server.get('/orders', async (req,res,next) => {//GET ORDER BY ID
     
     console.log("Fetching All Orders...")
     returnMessage = {
         success: false,
         message: ""
     }
+    try{
+        let _returnedOrderList = [];
+        let foundOrders = OrderModel.find({})//.then((foundOrders)=>{
+            if(foundOrders){
+                console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
 
-    OrderModel.find({}).then((foundOrders)=>{
-        if(foundOrders){
-            console.log("Orders Found -> Returning "  + foundOrders.length + " Orders");
-            returnMessage = {
-                success: true,
-                orders: foundOrders
+                
+
+                for(let i = 0; i < foundOrders.length - 1; i++){
+
+                    let foundProduct = await ProductModel.findOne({_id: foundOrders[i].productId})
+                    if(foundProduct){
+
+                        let foundUser = await UserModel.findOne({_id: foundOrders[i].userId})
+                        if(foundProduct){
+
+                            let _user = {
+                                _id: foundUser._id,
+                                firstName: foundUser.firstName,
+                                lastName: foundUser.lastName,
+                                email: foundUser.email,
+                                gender: foundUser.gender,
+                                phoneNumber: foundUser.phoneNumber,
+                                address: foundUser.address,
+                            };
+
+                            let _order = {
+                                _id: foundOrders[i]._id,
+                                product: foundProduct,
+                                user: _user,
+                                quantity: foundOrders[i].quantity,
+                                totalPrice: foundOrders[i].totalPrice,
+                                status: foundOrders[i].status,
+                                creationDate: foundOrders[i].creationDate,
+                                updateDate: foundOrders[i].updateDate
+                            }
+                                
+                            _returnedOrderList.push(_order);
+
+                        }else{
+                            
+                            returnMessage.message = "Getting Order List Failed: A User for an Order was not Found - " + foundOrders[i].userId
+                            res.status(200).json(returnMessage);
+                                            
+                            return next();
+                        }
+
+                    }else{
+                        returnMessage.message = "Getting Order List Failed: A Product for an Order was not Found - " + foundOrders[i].productId
+                        res.status(200).json(returnMessage);
+                                            
+                        return next();
+                    }
+                }
+
+                returnMessage = {
+                    success: true,
+                    orders: foundOrders
+                }
+                res.status(200).json(returnMessage)
+
+            }else{
+
+                returnMessage.message = "No Orders Found"
+                res.status(200).json(returnMessage);
+
+                return next();
+
             }
-            res.status(200).json(returnMessage)
-
-        }else{
-
-            returnMessage.message = "No Orders Found"
-            res.status(200).json(returnMessage);
-
-            return next();
-
+        }catch(getAllOrdersError){
+            console.log('An Error occured while trying to fetch All Orders! : ' + getAllOrdersError);
+            return res.status(500).json({ error: "ERROR! : " + getAllOrdersError.errors});
         }
-    }).catch((getAllOrdersError)=>{
-        console.log('An Error occured while trying to fetch All Orders! : ' + getAllOrdersError);
-        return res.status(500).json({ error: "ERROR! : " + getAllOrdersError.errors});
-    })
+    // }).catch(()=>{
+
+    // })
 })
 
 // server.post('/orders', (req,res,next) => {//ADD ORDER
