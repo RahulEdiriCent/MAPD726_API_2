@@ -845,18 +845,18 @@ server.post('/cartitems', (req,res,next) => {//ADD CART ITEM
             totalPrice: req.body.totalPrice
         });
 
-        toAddCartItem.save().then((addedProduct)=>{
-        console.log("Successfully Added Cart Item:" + addedProduct._id);
-    
-        returnMessage.success = true
-        returnMessage.message = "Cart Item Successfully Added"
-    
-        res.status(200).json(returnMessage);
-        return next();
+            toAddCartItem.save().then((addedProduct)=>{
+            console.log("Successfully Added Cart Item:" + addedProduct._id);
+        
+            returnMessage.success = true
+            returnMessage.message = "Cart Item Successfully Added"
+        
+            res.status(200).json(returnMessage);
+            return next();
     
         }).catch((addCartItemError)=>{
             console.log('An Error occured while trying to add Cart Item: ' + addCartItemError);
-            return res.status(500).json({ error: "ERROR! : " + addCartItemError.errors});
+            return res.status(500).json({ error: "ERROR! : " + addCartItemError});
             //return next(new Error(JSON.stringify("ERROR! " + addCartItemError.errors)));
         });
 
